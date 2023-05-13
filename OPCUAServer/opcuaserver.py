@@ -1,37 +1,31 @@
-import sys
-sys.path.insert(0, "..")
-import time
 from opcua import ua, Server
+import json
+import time
+import random
 
-if __name__ == "__main__":
+# create server
+server = Server()
+server.set_endpoint("opc.tcp://localhost:4840")
 
-    # setup our server
-    server = Server()
-    server.set_endpoint("opc.tcp://127.0.0.1:4840/freeopcua/server/")
+# create objects and variables from json file
+with open("nodes.json", "r") as f:
+    nodes = json.load(f)
 
-    # setup our own namespace, not really necessary but should as spec
-    uri = "http://examples.freeopcua.github.io"
-    idx = server.register_namespace(uri)
+for node in nodes:
+    obj = server.nodes.objects.add_object(node["node_id"], node["name"])
+    for var in node["variables"]:
+        obj.add_variable(var["node_id"], var["name"], var["value"])
 
-    # get Objects node, this is where we should put our nodes
-    objects = server.get_objects_node()
+# start server
+server.start()
 
-    # populating our address space
-    myobj = objects.add_object(idx, "Machine1")
-    myvar = myobj.add_variable(idx, "RandomNumber", 6.7)
-    myvar.set_writable()    # Set MyVariable to be writable by clients
-
-    # starting!
-    server.start()
-
-    try:
-        count = 0
-        while True:
-            time.sleep(0.01)
-            if count > 1000:
-                count = 0
-            count += 0.1
-            myvar.set_value(count)
-    finally:
-        #close connection, remove subscriptions, etc
-        server.stop()
+try:
+    while True:
+        time.sleep(0.5)
+        for node in nodes:
+            for var in node["variables"]:
+                value = random.randint(var["range_min"], var["range_max"])
+                var_node = server.get_node(var["node_id"])
+                var_node.set_value(value)
+finally:
+    server.stop()
