@@ -1,12 +1,50 @@
 from fastapi import FastAPI
 from datetime import datetime
-from opcua import Client
+from opcua import Client, ua
+from typing import Optional
 
-url = "opc.tcp://localhost:4840"  # replace with your OPC UA server's URL
+security_policies = {
+    "NoSecurity": ua.SecurityPolicyType.NoSecurity,
+    "Basic128Rsa15_Sign": ua.SecurityPolicyType.Basic128Rsa15_Sign,
+    "Basic128Rsa15_SignAndEncrypt": ua.SecurityPolicyType.Basic128Rsa15_SignAndEncrypt,
+    "Basic256_Sign": ua.SecurityPolicyType.Basic256_Sign,
+    "Basic256_SignAndEncrypt": ua.SecurityPolicyType.Basic256_SignAndEncrypt,
+    "Basic256Sha256_Sign": ua.SecurityPolicyType.Basic256Sha256_Sign,
+    "Basic256Sha256_SignAndEncrypt": ua.SecurityPolicyType.Basic256Sha256_SignAndEncrypt
+}
 
-client = Client(url)
-client.connect()
 
+def ReadAllOPCUAValues(opcUrl : str, UserName : Optional[str] = None, Password : Optional[str] = None , Secure_Policy : Optional[str] = None):
+    if (UserName is None) and (Password is None) and (Secure_Policy is None) :
+        client = Client(opcUrl)
+    else:
+        security_policy = security_policies[Secure_Policy]
+        user_token_policy = ua.UserTokenPolicy()
+        user_token_policy.set_userpass(UserName, Password)
+        security_settings = ua.SecuritySettings()
+        security_settings.set_security_policy(security_policy)
+        security_settings.set_user_token_policy(user_token_policy)
+        client.set_security_string(security_settings)
+        client = Client(opcUrl)
+        
+    
+    client.connect()
+    CurrentNodeValues = {}
+    root = client.get_root_node()
+    objects = root.get_children()[0]
+    nodes = objects.get_children()
+    for node in nodes:
+        for subnode in node.get_children():
+            if "ns=1" in str(subnode):
+                node_id = str(subnode)
+                value = client.get_node(node_id).get_value()
+                CurrentNodeValues.update({node_id:value})
+    
+    client.disconnect()
+    return CurrentNodeValues
+
+
+print(ReadAllOPCUAValues("opc.tcp://localhost:4840"))
 app = FastAPI()
 
 #Testing
@@ -14,33 +52,13 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 
-# Define a GET endpoint to retrieve the current client URLs
-@app.get("/opcuavalues")
-def get_opcua_urls():
-    return {"urls": list(clients.keys())}
+# Get all Values of the OPC UA Server
+@app.get("/ReadAllOPCValues")
+def opcuavalues(opcUrl : str, UserName : Optional[str] = None, Password : Optional[str] = None , Secure_Policy : Optional[str] = None):
+    return ReadAllOPCUAValues(opcUrl, UserName, Password, Secure_Policy)
 
-# Define a SET endpoint to update the client URL for a specific server
-@app.set("/opcua-url/")
-def set_opcua_url(server_name: str, url: str):
-    if server_name in clients:
-        clients[server_name].disconnect()
-    clients[server_name] = create_client(url)
-    return {"message": f"Client URL for {server_name} updated successfully"}
-
-# Define an endpoint to test the connection to a specific server
-@app.get("/TestConnection/")
-def test_connection(server_name: str):
-    if server_name not in clients:
-        return {"error": f"Server {server_name} not found"}
-    if clients[server_name].uaclient.get_state() == "Connected":
-        return {"message": f"Connection to {server_name} successful"}
-    else:
-        return {"message": f"Connection to {server_name} failed"}
-
-
-
-# Define a shutdown event to disconnect all clients when the server is stopped
-@app.on_event("shutdown")
-def shutdown_event():
-    for client in clients.values():
-        client.disconnect()
+# Get Filtered Values of the OPC UA Server
+@app.get("/ReadFilteredOPCUAValues")
+def opcuavalues(opcUrl : str, nodeid : str, UserName :  Optional[str] = None, Password :  Optional[str] = None , Secure_Policy :  Optional[str] = None):
+    NodeColletion = ReadAllOPCUAValues(opcUrl, UserName, Password, Secure_Policy)
+    return {node_id: Current_value for node_id, Current_value in NodeColletion.items() if nodeid in node_id}
