@@ -43,8 +43,6 @@ def ReadAllOPCUAValues(opcUrl : str, UserName : Optional[str] = None, Password :
     client.disconnect()
     return CurrentNodeValues
 
-
-print(ReadAllOPCUAValues("opc.tcp://localhost:4840"))
 app = FastAPI()
 
 #Testing
