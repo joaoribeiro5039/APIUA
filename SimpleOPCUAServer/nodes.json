@@ -27,6 +27,14 @@
                 "isRandom": false,
                 "range_min": 0,
                 "range_max": 5
+            },
+            {
+                "node_id": "ns=1;s=Machine1.DateTime",
+                "name": "DateTime",
+                "value": 0,
+                "isRandom": false,
+                "range_min": 0,
+                "range_max": 0
             }
         ]
     },
@@ -57,6 +65,14 @@
                 "isRandom": false,
                 "range_min": 0,
                 "range_max": 5
+            },
+            {
+                "node_id": "ns=1;s=Machine2.DateTime",
+                "name": "DateTime",
+                "value": 0,
+                "isRandom": false,
+                "range_min": 0,
+                "range_max": 0
             }
         ]
     }

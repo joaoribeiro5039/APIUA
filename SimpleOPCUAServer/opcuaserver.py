@@ -7,7 +7,7 @@ import datetime
 # create server
 server = Server()
 server.name = "SimpleOPCUA"
-server.set_endpoint("opc.tcp://192.168.1.108:4840")
+server.set_endpoint("opc.tcp://192.168.1.242:4840")
 
 # create objects and variables from json file
 with open("nodes.json", "r") as f:
@@ -28,10 +28,13 @@ try:
         time.sleep(0.01)
         for node in nodes:
             for var in node["variables"]:
+                var_node = server.get_node(var["node_id"])
                 if var["isRandom"]:
                     value = random.randint(var["range_min"], var["range_max"])
-                    var_node = server.get_node(var["node_id"])
                     var_node.set_value(value)
+                if "DateTime" in var["name"]:
+                    var_node.set_value(datetime.datetime.now())
+
 
 finally:
     server.stop()
