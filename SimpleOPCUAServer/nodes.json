@@ -7,6 +7,7 @@
                 "node_id": "ns=1;s=Machine1.Speed",
                 "name": "Speed",
                 "value": 0,
+                "isRandom": true,
                 "range_min": 200,
                 "range_max": 400
             },
@@ -15,8 +16,17 @@
                 "name": "Temperature",
                 "value": 0,
                 "range": 0,
+                "isRandom": true,
                 "range_min": 300,
                 "range_max": 400
+            },
+            {
+                "node_id": "ns=1;s=Machine1.State",
+                "name": "State",
+                "value": 0,
+                "isRandom": false,
+                "range_min": 0,
+                "range_max": 5
             }
         ]
     },
@@ -28,6 +38,7 @@
                 "node_id": "ns=1;s=Machine2.Speed",
                 "name": "Speed",
                 "value": 0,
+                "isRandom": true,
                 "range_min": 200,
                 "range_max": 400
             },
@@ -35,8 +46,17 @@
                 "node_id": "ns=1;s=Machine2.Temperature",
                 "name": "Temperature",
                 "value": 0,
+                "isRandom": true,
                 "range_min": 300,
                 "range_max": 400
+            },
+            {
+                "node_id": "ns=1;s=Machine2.State",
+                "name": "State",
+                "value": 0,
+                "isRandom": false,
+                "range_min": 0,
+                "range_max": 5
             }
         ]
     }
