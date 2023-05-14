@@ -5,7 +5,7 @@ import random
 
 # create server
 server = Server()
-server.set_endpoint("opc.tcp://localhost:4840")
+server.set_endpoint("opc.tcp://127.0.0.1:4840")
 
 # create objects and variables from json file
 with open("nodes.json", "r") as f:
