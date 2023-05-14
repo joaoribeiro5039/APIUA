@@ -1,12 +1,12 @@
 FROM python:3-alpine
 
 RUN pip install --upgrade pip
-RUN pip install opcua
-RUN pip install "uvicorn[standard]"
-RUN pip install "fastapi[all]"
+RUN pip install -r requirements.txt
+
 RUN mkdir /api
 
 WORKDIR /usr/src/api
+
 COPY api.py .
 EXPOSE 8000
 EXPOSE 4840
