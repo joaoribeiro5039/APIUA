@@ -1,0 +1,15 @@
+version: '3'
+services:
+  # api:
+  #   image: api
+  #   container_name: api
+  #   ports:
+  #     - "8000:8000"
+  #     - "4840:4840"
+  #   depends_on: 
+  #     - cassandra
+  cassandra:
+    image: cassandra
+    container_name: cassandra
+    ports:
+      - "9042:9042"
