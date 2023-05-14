@@ -4,7 +4,6 @@ RUN pip install --upgrade pip
 RUN pip install opcua
 RUN pip install "uvicorn[standard]"
 RUN pip install "fastapi[all]"
-RUN pip install numpy
 RUN mkdir /api
 
 WORKDIR /usr/src/api
