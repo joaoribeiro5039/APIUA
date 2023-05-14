@@ -87,12 +87,12 @@ opcConfig = [
 # create server
 server = Server()
 server.name = "SimpleOPCUA"
-server.set_endpoint("opc.tcp://0.0.0.0:4840")
+server.set_endpoint("opc.tcp://127.0.0.2:4840")
 
 # create objects and variables from json file
 with open("nodes.json", "r") as f:
     jsonnodes = json.load(f)
-    
+
 for node in jsonnodes:
     obj = server.nodes.objects.add_object(node["node_id"], node["name"])
     for var in node["variables"]:

@@ -1,8 +1,24 @@
 from fastapi import FastAPI
 import asyncio
-from datetime import datetime
+import datetime
+import json
 from opcua import Client, ua
 from typing import Optional
+from cassandra.cluster import Cluster
+
+global cluster
+global session 
+
+cluster = Cluster(["localhost"])
+session = cluster.connect()
+session.execute("CREATE KEYSPACE IF NOT EXISTS opcmonitor WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}")
+session.set_keyspace('opcmonitor')
+session.execute("CREATE TABLE IF NOT EXISTS AllMonitors (id text PRIMARY KEY, monitorkey text, data text)")
+
+def StoreTolocalCassandra(table: str, data: str):
+    time = str(datetime.datetime.now())
+    global session 
+    session.execute("INSERT INTO AllMonitors (id,monitorkey,data) VALUES (%s,%s,%s)",(time,table,data))
 
 security_policies = {
     "NoSecurity": ua.SecurityPolicyType.NoSecurity,
@@ -13,7 +29,6 @@ security_policies = {
     "Basic256Sha256_Sign": ua.SecurityPolicyType.Basic256Sha256_Sign,
     "Basic256Sha256_SignAndEncrypt": ua.SecurityPolicyType.Basic256Sha256_SignAndEncrypt
 }
-
 
 def ReadAllOPCUAValues(opcUrl : str, UserName : Optional[str] = None, Password : Optional[str] = None , Secure_Policy : Optional[str] = None):
     if (UserName is None) and (Password is None) and (Secure_Policy is None) :
@@ -55,23 +70,46 @@ def WriteOPCUAValues(opcUrl : str, nodeid : str, value : str, UserName : Optiona
         security_settings.set_user_token_policy(user_token_policy)
         client.set_security_string(security_settings)
         client = Client(opcUrl)
-        
     client.connect()
     client.get_node(nodeid).set_value(value)
-
     client.disconnect()
 
 async def Monitor(Freq : int, opcUrl : str, nodeid : str, UserName :  Optional[str] = None, Password :  Optional[str] = None , Secure_Policy :  Optional[str] = None): 
     global StopFlag
+    if (UserName is None) and (Password is None) and (Secure_Policy is None) :
+        client = Client(opcUrl)
+    else:
+        security_policy = security_policies[Secure_Policy]
+        user_token_policy = ua.UserTokenPolicy()
+        user_token_policy.set_userpass(UserName, Password)
+        security_settings = ua.SecuritySettings()
+        security_settings.set_security_policy(security_policy)
+        security_settings.set_user_token_policy(user_token_policy)
+        client.set_security_string(security_settings)
+        client = Client(opcUrl)
+    client.connect()
     while not StopFlag:
-        print("Starting task...")
-        NodeColletion = ReadAllOPCUAValues(opcUrl, UserName, Password, Secure_Policy)
-        MonitorCollection = {node_id: Current_value for node_id, Current_value in NodeColletion.items() if nodeid in node_id}
+        CurrentNodeValues = {}
+        root = client.get_root_node()
+        objects = root.get_children()[0]
+        nodes = objects.get_children()
+        for node in nodes:
+            for subnode in node.get_children():
+                if "ns=1" in str(subnode):
+                    node_id = str(subnode)
+                    value = client.get_node(node_id).get_value()
+                    CurrentNodeValues.update({node_id:value})
+        MonitorCollection = {node_id: Current_value for node_id, Current_value in CurrentNodeValues.items() if nodeid in node_id}
         print(MonitorCollection)
+        json_string = str(MonitorCollection)
+        print(json_string)
+        monitorID = str(opcUrl+nodeid)
+        StoreTolocalCassandra(monitorID,json_string)
         await asyncio.sleep(1/Freq)
-        print("Task completed.")
+    client.disconnect()
 
 app = FastAPI()
+
 
 #Testing
 @app.get("/Testing")
@@ -109,3 +147,13 @@ async def Start_Monitor(Freq : int, opcUrl : str, nodeid : str, UserName :  Opti
 async def Start_Monitor():
     global StopFlag
     StopFlag = True
+
+#On Shutdown
+@app.on_event("shutdown")
+async def shutdown_event():
+    global StopFlag
+    StopFlag = True
+    await asyncio.sleep(1)
+    session.shutdown()
+    cluster.shutdown()
+    print("Shutting down...")
