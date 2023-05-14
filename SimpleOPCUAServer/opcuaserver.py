@@ -7,7 +7,7 @@ import datetime
 # create server
 server = Server()
 server.name = "SimpleOPCUA"
-server.set_endpoint("opc.tcp://192.168.1.242:4840")
+server.set_endpoint("opc.tcp://192.168.1.108:4840")
 
 # create objects and variables from json file
 with open("nodes.json", "r") as f:
@@ -17,10 +17,8 @@ with open("nodes.json", "r") as f:
 for node in nodes:
     obj = server.nodes.objects.add_object(node["node_id"], node["name"])
     for var in node["variables"]:
-        obj.add_variable(var["node_id"], var["name"], var["value"])
-        obj.set_writable(True)
-        obj.set_access_level(ua.AccessLevel.CurrentReadOrWrite)
-        obj.set_user_access_level(ua.AccessLevel.CurrentReadAndWrite)
+        opc_var = obj.add_variable(var["node_id"], var["name"], var["value"])
+        opc_var.set_writable(True)
 
 # start server
 server.start()
