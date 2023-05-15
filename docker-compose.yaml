@@ -1,15 +1,53 @@
 version: '3'
 services:
-  # api:
-  #   image: api
-  #   container_name: api
-  #   ports:
-  #     - "8000:8000"
-  #     - "4840:4840"
-  #   depends_on: 
-  #     - cassandra
+  api:
+    image: api
+    container_name: api
+    ports:
+      - "8000:8000"
+    networks:
+      - dockernetwork
+    restart: always
+    depends_on: 
+      - opcua1
+      - opcua2
+      - opcua3
+  opcua1:
+    image: opcserver
+    container_name: opcserver1
+    ports:
+      - "4841:4840"
+    networks:
+      - dockernetwork
+    restart: always
+    depends_on: 
+      - cassandra
+  opcua2:
+    image: opcserver
+    container_name: opcserver2
+    ports:
+      - "4842:4840"
+    networks:
+      - dockernetwork
+    restart: always
+    depends_on: 
+      - cassandra
+  opcua3:
+    image: opcserver
+    container_name: opcserver3
+    ports:
+      - "4843:4840"
+    networks:
+      - dockernetwork
+    restart: always
+    depends_on: 
+      - cassandra
   cassandra:
     image: cassandra
     container_name: cassandra
-    ports:
-      - "9042:9042"
+    restart: always
+    networks:
+      - dockernetwork
+networks:
+  dockernetwork:
+    driver: bridge

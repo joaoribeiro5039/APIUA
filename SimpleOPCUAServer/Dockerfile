@@ -10,4 +10,4 @@ COPY opcuaserver.py .
 COPY nodes.json .
 EXPOSE 4840
 
-CMD ["python","opcuaserver.py","--host","127.0.0.2"]
+CMD ["python","opcuaserver.py","--host","0.0.0.0"]
