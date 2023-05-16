@@ -1,4 +1,4 @@
-# OPCUAWatchdog
+# OPC UA Monitoring
 Solution for Data Sincronization between Several OPC UA Servers
 
 ## Requirements
