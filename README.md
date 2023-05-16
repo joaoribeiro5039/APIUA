@@ -1,3 +1,5 @@
+# OPCUAWatchdog
+Solution for Data Sincronization between Several OPC UA Servers
 ## Introduction
 This project provides a monitoring solution for OPC UA servers. It consists of a docker-compose file that sets up multiple OPC UA servers, a Cassandra database, and a Python-based API. The API allows users to set up monitoring activity for a specific node or structure of an OPC UA server.
 
