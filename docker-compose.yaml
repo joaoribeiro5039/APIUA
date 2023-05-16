@@ -9,34 +9,12 @@ services:
       - dockernetwork
     restart: always
     depends_on: 
-      - opcua1
-      - opcua2
-      - opcua3
-  opcua1:
+      - opcua
+  opcua:
     image: opcserver
-    container_name: opcserver1
+    container_name: opcserver
     ports:
       - "4841:4840"
-    networks:
-      - dockernetwork
-    restart: always
-    depends_on: 
-      - cassandra
-  opcua2:
-    image: opcserver
-    container_name: opcserver2
-    ports:
-      - "4842:4840"
-    networks:
-      - dockernetwork
-    restart: always
-    depends_on: 
-      - cassandra
-  opcua3:
-    image: opcserver
-    container_name: opcserver3
-    ports:
-      - "4843:4840"
     networks:
       - dockernetwork
     restart: always
@@ -46,6 +24,8 @@ services:
     image: cassandra
     container_name: cassandra
     restart: always
+    ports:
+      - "9042:9042"
     networks:
       - dockernetwork
 networks:
